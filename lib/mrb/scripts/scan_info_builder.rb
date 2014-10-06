@@ -257,6 +257,11 @@ module Groonga
           optimized_data_list << between_data
           i += 1
           next
+        elsif leading_not_operations?(data, next_data)
+          optimized_data_list << next_data
+          optimized_data_list << data
+          i += 2
+          next
         end
         optimized_data_list << data
       end
@@ -271,6 +276,18 @@ module Groonga
       return false if !(upper_condition?(op) or upper_condition?(next_op))
 
       return false if data.args[0] != next_data.args[0]
+
+      data_indexes = data.indexes
+      return false if data_indexes.empty?
+
+      data_indexes == next_data.indexes
+    end
+
+    def leading_not_operations?(data, next_data)
+      return false unless next_data.logical_op == Operator::AND
+
+      op, next_op = data.op, next_data.op
+      return false if (op == Operator::MATCH) or !(next_op == Operator::MATCH)
 
       data_indexes = data.indexes
       return false if data_indexes.empty?
