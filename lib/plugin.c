@@ -440,7 +440,14 @@ grn_plugin_open(grn_ctx *ctx, const char *filename)
   } else {
     const char *label;
     label = grn_dl_open_error_label();
-    SERR("%s: <%.*s>", label, (int)filename_size, filename);
+    const char *utf8_path;
+    size_t utf8_path_size;
+    utf8_path = grn_encoding_convert_from_locale(ctx,
+                                                 filename,
+                                                 filename_size,
+                                                 &utf8_path_size);
+    SERR("%s: <%.*s>", label, (int)utf8_path_size, utf8_path);
+    grn_encoding_converted_free(ctx, utf8_path);
   }
 
 exit:
