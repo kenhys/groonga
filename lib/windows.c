@@ -18,6 +18,7 @@
 
 #include "grn.h"
 #include "grn_windows.h"
+#include <wchar.h>
 
 #ifdef WIN32
 static char *windows_base_dir = NULL;
