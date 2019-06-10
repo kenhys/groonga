@@ -205,26 +205,9 @@ module CommandRunner
     normalized
   end
 
-  def normalize_object_path(path)
-    File.join(File.basename(File.dirname(path)), File.basename(path))
-  end
-
   private
-  def shorten_path(line)
-    if line =~ /\A(.+)<(.+\.db.*)>/
-      path = normalize_object_path($2)
-      line = "#{$1}<#{path}>"
-    else
-      line
-    end
-  end
-
   def stack_trace?(line)
-    if line =~ /\|e\| (.+?)\((.+?)\) \[(0x.+?)\]$/
-      true
-    else
-      false
-    end
+    line =~ /\|e\| (.+?)\((.+?)\) \[(0x.+?)\]$/
   end
 
   def run_command_interactive(*command_line)
