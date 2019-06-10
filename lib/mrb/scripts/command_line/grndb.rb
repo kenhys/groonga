@@ -3,6 +3,8 @@ require "groonga-log"
 module Groonga
   module CommandLine
     class Grndb
+      include Loggable
+
       def initialize(argv)
         @program_path, *@arguments = argv
         @output = LocaleOutput.new($stderr)
@@ -97,6 +99,7 @@ module Groonga
       def failed(*messages)
         messages.each do |message|
           @output.puts(message)
+          logger.log(:error, message)
         end
         @succeeded = false
       end
@@ -137,6 +140,8 @@ module Groonga
       end
 
       class Checker
+        include Loggable
+
         attr_writer :program_path
         attr_writer :database_path
         attr_writer :database
