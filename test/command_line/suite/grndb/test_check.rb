@@ -39,9 +39,11 @@ class TestGrnDBCheck < GroongaTestCase
     error = assert_raise(CommandRunner::Error) do
       grndb("check")
     end
-    assert_equal(<<-MESSAGE, error.error_output)
+    message = <<-MESSAGE
 Database has orphan 'inspect' object. Remove it by '#{real_grndb_path} recover #{@database_path}'.
     MESSAGE
+    assert_equal(message, error.error_output)
+    assert_includes(File.read(@log_path), message)
   end
 
   def test_locked_database
@@ -49,9 +51,11 @@ Database has orphan 'inspect' object. Remove it by '#{real_grndb_path} recover #
     error = assert_raise(CommandRunner::Error) do
       grndb("check")
     end
-    assert_equal(<<-MESSAGE, error.error_output)
+    message = <<-MESSAGE
 Database is locked. It may be broken. Re-create the database.
     MESSAGE
+    assert_equal(message, error.error_output)
+    assert_includes(File.read(@log_path), message)
   end
 
   sub_test_case "dirty database" do
@@ -69,9 +73,11 @@ load --table Users
       error = assert_raise(CommandRunner::Error) do
         grndb("check")
       end
-      assert_equal(<<-MESSAGE, error.error_output)
+      message = <<-MESSAGE
 Database wasn't closed successfully. It may be broken. Re-create the database.
       MESSAGE
+      assert_equal(message,  error.error_output)
+      assert_includes(File.read(@log_path), message)
     end
 
     def test_have_plugin
@@ -91,9 +97,11 @@ load --table Users
       error = assert_raise(CommandRunner::Error) do
         grndb("check")
       end
-      assert_equal(<<-MESSAGE, error.error_output)
+      message = <<-MESSAGE
 Database wasn't closed successfully. It may be broken. Re-create the database.
       MESSAGE
+      assert_equal(message, error.error_output)
+      assert_includes(File.read(@log_path), message)
     end
   end
 
@@ -121,9 +129,11 @@ load --table Users
     error = assert_raise(CommandRunner::Error) do
       grndb("check")
     end
-    assert_equal(<<-MESSAGE, error.error_output)
+    message = <<-MESSAGE
 [Users] Can't open object. It's broken. Re-create the object or the database.
     MESSAGE
+    assert_equal(message, error.error_output)
+    assert_includes(File.read(@log_path), message)
   end
 
   def test_locked_table
@@ -132,9 +142,11 @@ load --table Users
     error = assert_raise(CommandRunner::Error) do
       grndb("check")
     end
-    assert_equal(<<-MESSAGE, error.error_output)
+    message = <<-MESSAGE
 [Users] Table is locked. It may be broken. (1) Truncate the table (truncate Users) or clear lock of the table (lock_clear Users) and (2) load data again.
     MESSAGE
+    assert_equal(message, error.error_output)
+    assert_includes(File.read(@log_path), message)
   end
 
   def test_locked_data_column
@@ -144,9 +156,11 @@ load --table Users
     error = assert_raise(CommandRunner::Error) do
       grndb("check")
     end
-    assert_equal(<<-MESSAGE, error.error_output)
+    message = <<-MESSAGE
 [Users.age] Data column is locked. It may be broken. (1) Truncate the column (truncate Users.age) or clear lock of the column (lock_clear Users.age) and (2) load data again.
     MESSAGE
+    assert_equal(message, error.error_output)
+    assert_includes(File.read(@log_path), message)
   end
 
   sub_test_case "locked index column" do
@@ -163,9 +177,11 @@ load --table Users
       error = assert_raise(CommandRunner::Error) do
         grndb("check")
       end
-      assert_equal(<<-MESSAGE, error.error_output)
+      message = <<-MESSAGE
 [Ages.users_age] Index column is locked. It may be broken. Re-create index by '#{real_grndb_path} recover #{@database_path}'.
       MESSAGE
+      assert_equal(message, error.error_output)
+      assert_includes(File.read(@log_path), message)
     end
   end
 
@@ -187,9 +203,11 @@ load --table Users
     error = assert_raise(CommandRunner::Error) do
       grndb("check")
     end
-    assert_equal(<<-MESSAGE, error.error_output)
+    message = <<-MESSAGE
 [Users] Table is corrupt. (1) Truncate the table (truncate Users or '#{real_grndb_path} recover --force-truncate #{@database_path}') and (2) load data again.
     MESSAGE
+    assert_equal(message, error.error_output)
+    assert_includes(File.read(@log_path), message)
   end
 
   def test_corrupt_double_array_table
@@ -204,9 +222,11 @@ load --table Users
     error = assert_raise(CommandRunner::Error) do
       grndb("check")
     end
-    assert_equal(<<-MESSAGE, error.error_output)
+    message = <<-MESSAGE
 [Users] Table is corrupt. (1) Truncate the table (truncate Users or '#{real_grndb_path} recover --force-truncate #{@database_path}') and (2) load data again.
     MESSAGE
+    assert_equal(message, error.error_output)
+    assert_includes(File.read(@log_path), message)
   end
 
   def test_corrupt_data_column
@@ -228,9 +248,11 @@ load --table Users
     error = assert_raise(CommandRunner::Error) do
       grndb("check")
     end
-    assert_equal(<<-MESSAGE, error.error_output)
+    message = <<-MESSAGE
 [Data.text] Data column is corrupt. (1) Truncate the column (truncate Data.text or '#{real_grndb_path} recover --force-truncate #{@database_path}') and (2) load data again.
     MESSAGE
+    assert_equal(message, error.error_output)
+    assert_includes(File.read(@log_path), message)
   end
 
   sub_test_case "--target" do
@@ -241,9 +263,11 @@ load --table Users
       error = assert_raise(CommandRunner::Error) do
         grndb("check", "--target", "Users")
       end
-      assert_equal(<<-MESSAGE, error.error_output)
+      message = <<-MESSAGE
 [Users] Can't open object. It's broken. Re-create the object or the database.
       MESSAGE
+      assert_equal(message, error.error_output)
+      assert_includes(File.read(@log_path), message)
     end
 
     def test_locked_table
@@ -262,10 +286,14 @@ load --table Users
       error = assert_raise(CommandRunner::Error) do
         grndb("check", "--target", "Users")
       end
-      assert_equal(<<-MESSAGE, error.error_output)
+      messages = <<-MESSAGE
 [Users] Table is locked. It may be broken. (1) Truncate the table (truncate Users) or clear lock of the table (lock_clear Users) and (2) load data again.
 [Users.age] Data column is locked. It may be broken. (1) Truncate the column (truncate Users.age) or clear lock of the column (lock_clear Users.age) and (2) load data again.
       MESSAGE
+      assert_equal(messages, error.error_output)
+      messages.split("\n").each do |message|
+        assert_includes(File.read(@log_path), message)
+      end
     end
 
     def test_locked_data_column
@@ -278,9 +306,11 @@ load --table Users
       error = assert_raise(CommandRunner::Error) do
         grndb("check", "--target", "Users.age")
       end
-      assert_equal(<<-MESSAGE, error.error_output)
+      message = <<-MESSAGE
 [Users.age] Data column is locked. It may be broken. (1) Truncate the column (truncate Users.age) or clear lock of the column (lock_clear Users.age) and (2) load data again.
       MESSAGE
+      assert_equal(message, error.error_output)
+      assert_includes(File.read(@log_path), message)
     end
 
     def test_nonexistent_referenced_table
@@ -297,9 +327,11 @@ load --table Users
       error = assert_raise(CommandRunner::Error) do
         grndb("check", "--target", "Bookmarks")
       end
-      assert_equal(<<-MESSAGE, error.error_output)
+      message = <<-MESSAGE
 [Users] Can't open object. It's broken. Re-create the object or the database.
       MESSAGE
+      assert_equal(message, error.error_output)
+      assert_includes(File.read(@log_path), message)
     end
 
     def test_referenced_table_by_table
@@ -315,11 +347,15 @@ load --table Users
       error = assert_raise(CommandRunner::Error) do
         grndb("check", "--target", "Admins")
       end
-      assert_equal(<<-MESSAGE, error.error_output)
+      messages = <<-MESSAGE
 [Admins] Table is locked. It may be broken. (1) Truncate the table (truncate Admins) or clear lock of the table (lock_clear Admins) and (2) load data again.
 [Users] Table is locked. It may be broken. (1) Truncate the table (truncate Users) or clear lock of the table (lock_clear Users) and (2) load data again.
 [Users.age] Data column is locked. It may be broken. (1) Truncate the column (truncate Users.age) or clear lock of the column (lock_clear Users.age) and (2) load data again.
       MESSAGE
+      assert_equal(messages, error.error_output)
+      messages.split("\n").each do |message|
+        assert_includes(File.read(@log_path), message)
+      end
     end
 
     def test_referenced_table_by_column
@@ -337,11 +373,15 @@ load --table Users
       error = assert_raise(CommandRunner::Error) do
         grndb("check", "--target", "Bookmarks.user")
       end
-      assert_equal(<<-MESSAGE, error.error_output)
+      messages = <<-MESSAGE
 [Bookmarks.user] Data column is locked. It may be broken. (1) Truncate the column (truncate Bookmarks.user) or clear lock of the column (lock_clear Bookmarks.user) and (2) load data again.
 [Users] Table is locked. It may be broken. (1) Truncate the table (truncate Users) or clear lock of the table (lock_clear Users) and (2) load data again.
 [Users.age] Data column is locked. It may be broken. (1) Truncate the column (truncate Users.age) or clear lock of the column (lock_clear Users.age) and (2) load data again.
       MESSAGE
+      assert_equal(messages, error.error_output)
+      messages.split("\n").each do |message|
+        assert_includes(File.read(@log_path), message)
+      end
     end
 
     def test_locked_index_column
@@ -362,12 +402,16 @@ load --table Users
       error = assert_raise(CommandRunner::Error) do
         grndb("check", "--target", "Ages")
       end
-      assert_equal(<<-MESSAGE, error.error_output)
+      messages = <<-MESSAGE
 [Ages] Table is locked. It may be broken. (1) Truncate the table (truncate Ages) or clear lock of the table (lock_clear Ages) and (2) load data again.
 [Ages.users_age] Index column is locked. It may be broken. Re-create index by '#{real_grndb_path} recover #{@database_path}'.
 [Users] Table is locked. It may be broken. (1) Truncate the table (truncate Users) or clear lock of the table (lock_clear Users) and (2) load data again.
 [Users.age] Data column is locked. It may be broken. (1) Truncate the column (truncate Users.age) or clear lock of the column (lock_clear Users.age) and (2) load data again.
       MESSAGE
+      assert_equal(messages, error.error_output)
+      messages.split("\n").each do |message|
+        assert_includes(File.read(@log_path), message)
+      end
     end
 
     def test_indexed_table
@@ -388,12 +432,16 @@ load --table Users
       error = assert_raise(CommandRunner::Error) do
         grndb("check", "--target", "Names")
       end
-      assert_equal(<<-MESSAGE, error.error_output)
+      messages = <<-MESSAGE
 [Names] Table is locked. It may be broken. (1) Truncate the table (truncate Names) or clear lock of the table (lock_clear Names) and (2) load data again.
 [Names.users_names] Index column is locked. It may be broken. Re-create index by '#{real_grndb_path} recover #{@database_path}'.
 [Users] Table is locked. It may be broken. (1) Truncate the table (truncate Users) or clear lock of the table (lock_clear Users) and (2) load data again.
 [Users.name] Data column is locked. It may be broken. (1) Truncate the column (truncate Users.name) or clear lock of the column (lock_clear Users.name) and (2) load data again.
       MESSAGE
+      assert_equal(messages, error.error_output)
+      messages.split("\n").each do |message|
+        assert_includes(File.read(@log_path), message)
+      end
     end
 
     def test_indexed_data_column
@@ -421,13 +469,17 @@ load --table Users
       error = assert_raise(CommandRunner::Error) do
         grndb("check", "--target", "Users.name")
       end
-      assert_equal(<<-MESSAGE, error.error_output)
+      messages = <<-MESSAGE
 [Users.name] Data column is locked. It may be broken. (1) Truncate the column (truncate Users.name) or clear lock of the column (lock_clear Users.name) and (2) load data again.
 [NormalizedNames.users_name] Index column is locked. It may be broken. Re-create index by '#{real_grndb_path} recover #{@database_path}'.
 [Names.users_name] Index column is locked. It may be broken. Re-create index by '#{real_grndb_path} recover #{@database_path}'.
 [NormalizedNames] Table is locked. It may be broken. (1) Truncate the table (truncate NormalizedNames) or clear lock of the table (lock_clear NormalizedNames) and (2) load data again.
 [Names] Table is locked. It may be broken. (1) Truncate the table (truncate Names) or clear lock of the table (lock_clear Names) and (2) load data again.
       MESSAGE
+      assert_equal(messages, error.error_output)
+      messages.split("\n").each do |message|
+        assert_includes(File.read(@log_path), message)
+      end
     end
 
     def test_cycle_reference
@@ -447,12 +499,16 @@ load --table Users
       error = assert_raise(CommandRunner::Error) do
         grndb("check", "--target", "Users")
       end
-      assert_equal(<<-MESSAGE, error.error_output)
+      messages = <<-MESSAGE
 [Users] Table is locked. It may be broken. (1) Truncate the table (truncate Users) or clear lock of the table (lock_clear Users) and (2) load data again.
 [Users.logs_user] Index column is locked. It may be broken. Re-create index by '#{real_grndb_path} recover #{@database_path}'.
 [Logs] Table is locked. It may be broken. (1) Truncate the table (truncate Logs) or clear lock of the table (lock_clear Logs) and (2) load data again.
 [Logs.user] Data column is locked. It may be broken. (1) Truncate the column (truncate Logs.user) or clear lock of the column (lock_clear Logs.user) and (2) load data again.
       MESSAGE
+      assert_equal(messages, error.error_output)
+      messages.split("\n").each do |message|
+        assert_includes(File.read(@log_path), message)
+      end
     end
   end
 end
