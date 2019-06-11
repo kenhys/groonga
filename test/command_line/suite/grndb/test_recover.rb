@@ -17,10 +17,14 @@ class TestGrnDBRecover < GroongaTestCase
     error = assert_raise(CommandRunner::Error) do
       grndb("recover")
     end
-    assert_equal(<<-MESSAGE, error.error_output)
+    messages = <<-MESSAGE
 Failed to recover database: <#{@database_path}>
 object corrupt: <[db][recover] database may be broken. Please re-create the database>(-55)
     MESSAGE
+    assert_equal(messages, error.error_output)
+    messages.split("\n").each do |message|
+      assert_includes(File.read(@log_path), message)
+    end
   end
 
   sub_test_case("locked table") do
@@ -36,20 +40,30 @@ object corrupt: <[db][recover] database may be broken. Please re-create the data
       error = assert_raise(CommandRunner::Error) do
         grndb("recover")
       end
-      assert_equal(<<-MESSAGE, error.error_output)
+      messages = <<-MESSAGE
 Failed to recover database: <#{@database_path}>
 object corrupt: <[db][recover] table may be broken: <Users>: please truncate the table (or clear lock of the table) and load data again>(-55)
       MESSAGE
+      assert_equal(messages, error.error_output)
+      messages.split("\n").each do |message|
+        assert_includes(File.read(@log_path), message)
+      end
     end
 
     def test_force_truncate
       additional_path = "#{@table_path}.002"
       FileUtils.touch(additional_path)
-      result = grndb("recover", "--force-truncate")
-      assert_equal(<<-MESSAGE, result.error_output)
+      result = grndb("recover",
+                     "--force-truncate",
+                     "--log-level", "info")
+      messages = <<-MESSAGE
 [Users] Truncated broken object: <#{@table_path}>
 [Users] Removed broken object related file: <#{additional_path}>
       MESSAGE
+      assert_equal(messages, result.error_output)
+      messages.split("\n").each do |message|
+        assert_includes(File.read(@log_path), message)
+      end
     end
   end
 
@@ -68,20 +82,30 @@ object corrupt: <[db][recover] table may be broken: <Users>: please truncate the
       error = assert_raise(CommandRunner::Error) do
         grndb("recover")
       end
-      assert_equal(<<-MESSAGE, error.error_output)
+      messages = <<-MESSAGE
 Failed to recover database: <#{@database_path}>
 object corrupt: <[db][recover] column may be broken: <Users.age>: please truncate the column (or clear lock of the column) and load data again>(-55)
       MESSAGE
+      assert_equal(messages, error.error_output)
+      messages.split("\n").each do |message|
+        assert_includes(File.read(@log_path), message)
+      end
     end
 
     def test_force_truncate
       additional_path = "#{@column_path}.002"
       FileUtils.touch(additional_path)
-      result = grndb("recover", "--force-truncate")
-      assert_equal(<<-MESSAGE, result.error_output)
+      result = grndb("recover",
+                     "--force-truncate",
+                     "--log-level", "info")
+      messages = <<-MESSAGE
 [Users.age] Truncated broken object: <#{@column_path}>
 [Users.age] Removed broken object related file: <#{additional_path}>
       MESSAGE
+      assert_equal(messages, result.error_output)
+      messages.split("\n").each do |message|
+        assert_includes(File.read(@log_path), message)
+      end
     end
   end
 
@@ -176,10 +200,14 @@ object corrupt: <[db][recover] column may be broken: <Users.age>: please truncat
     error = assert_raise(CommandRunner::Error) do
       grndb("recover")
     end
-    assert_equal(<<-MESSAGE, error.error_output)
+    messages = <<-MESSAGE
 Failed to recover database: <#{@database_path}>
 incompatible file format: <[io][open] file size is too small: <0>(required: >= 64): <#{path[0..68]}>(-65)
     MESSAGE
+    assert_equal(messages, error.error_output)
+    messages.split("\n").each do |message|
+      assert_includes(File.read(@log_path), message)
+    end
   end
 
   def test_broken_id
@@ -191,10 +219,14 @@ incompatible file format: <[io][open] file size is too small: <0>(required: >= 6
     error = assert_raise(CommandRunner::Error) do
       grndb("recover")
     end
-    assert_equal(<<-MESSAGE, error.error_output)
+    messages = <<-MESSAGE
 Failed to recover database: <#{@database_path}>
 incompatible file format: <failed to open: format ID is different: <#{path[0..85]}>(-65)
     MESSAGE
+    assert_equal(messages, error.error_output)
+    messages.split("\n").each do |message|
+      assert_includes(File.read(@log_path), message)
+    end
   end
 
   def test_broken_type_hash
@@ -206,10 +238,14 @@ incompatible file format: <failed to open: format ID is different: <#{path[0..85
     error = assert_raise(CommandRunner::Error) do
       grndb("recover")
     end
-    assert_equal(<<-MESSAGE, error.error_output)
+    messages = <<-MESSAGE
 Failed to recover database: <#{@database_path}>
 invalid format: <[table][hash] file type must be 0x30: <0000>>(-54)
     MESSAGE
+    assert_equal(messages, error.error_output)
+    messages.split("\n").each do |message|
+      assert_includes(File.read(@log_path), message)
+    end
   end
 
   def test_broken_type_array
@@ -221,9 +257,13 @@ invalid format: <[table][hash] file type must be 0x30: <0000>>(-54)
     error = assert_raise(CommandRunner::Error) do
       grndb("recover")
     end
-    assert_equal(<<-MESSAGE, error.error_output)
+    messages = <<-MESSAGE
 Failed to recover database: <#{@database_path}>
 invalid format: <[table][array] file type must be 0x33: <0000>>(-54)
     MESSAGE
+    assert_equal(messages, error.error_output)
+    messages.split("\n").each do |message|
+      assert_includes(File.read(@log_path), message)
+    end
   end
 end
