@@ -53,12 +53,13 @@ object corrupt: <[db][recover] table may be broken: <Users>: please truncate the
     def test_force_truncate
       additional_path = "#{@table_path}.002"
       FileUtils.touch(additional_path)
-      result = grndb("recover", "--force-truncate")
+      result = grndb("recover",
+                     "--force-truncate",
+                     "--log-level", "info")
       messages = <<-MESSAGE
 [Users] Truncated broken object: <#{@table_path}>
 [Users] Removed broken object related file: <#{additional_path}>
       MESSAGE
-      # FIXME:
       assert_equal(messages, result.error_output)
       messages.split("\n").each do |message|
         assert_includes(File.read(@log_path), message)
@@ -94,7 +95,9 @@ object corrupt: <[db][recover] column may be broken: <Users.age>: please truncat
     def test_force_truncate
       additional_path = "#{@column_path}.002"
       FileUtils.touch(additional_path)
-      result = grndb("recover", "--force-truncate")
+      result = grndb("recover",
+                     "--force-truncate",
+                     "--log-level", "info")
       messages = <<-MESSAGE
 [Users.age] Truncated broken object: <#{@column_path}>
 [Users.age] Removed broken object related file: <#{additional_path}>
