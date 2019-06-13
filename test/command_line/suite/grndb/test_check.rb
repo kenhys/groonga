@@ -166,7 +166,9 @@ load --table Users
 [Users] Table is locked. It may be broken. (1) Truncate the table (truncate Users) or clear lock of the table (lock_clear Users) and (2) load data again.
     MESSAGE
     assert_equal(message, error.error_output)
-    assert_includes(File.read(@log_path), message)
+    assert_equal(<<-MESSAGE, normalize_groonga_log(File.read(@log_path)))
+1970-01-01 00:00:00.000000|e| [Users] Table is locked. It may be broken. (1) Truncate the table (truncate Users) or clear lock of the table (lock_clear Users) and (2) load data again.
+    MESSAGE
   end
 
   def test_locked_data_column
@@ -180,7 +182,9 @@ load --table Users
 [Users.age] Data column is locked. It may be broken. (1) Truncate the column (truncate Users.age) or clear lock of the column (lock_clear Users.age) and (2) load data again.
     MESSAGE
     assert_equal(message, error.error_output)
-    assert_includes(File.read(@log_path), message)
+    assert_equal(<<-MESSAGE, normalize_groonga_log(File.read(@log_path)))
+1970-01-01 00:00:00.000000|e| [Users.age] Data column is locked. It may be broken. (1) Truncate the column (truncate Users.age) or clear lock of the column (lock_clear Users.age) and (2) load data again.
+    MESSAGE
   end
 
   sub_test_case "locked index column" do
@@ -201,7 +205,9 @@ load --table Users
 [Ages.users_age] Index column is locked. It may be broken. Re-create index by '#{real_grndb_path} recover #{@database_path}'.
       MESSAGE
       assert_equal(message, error.error_output)
-      assert_includes(File.read(@log_path), message)
+      assert_equal(<<-MESSAGE, normalize_groonga_log(File.read(@log_path)))
+1970-01-01 00:00:00.000000|e| [Ages.users_age] Index column is locked. It may be broken. Re-create index by '#{real_grndb_path} recover #{@database_path}'.
+      MESSAGE
     end
   end
 
