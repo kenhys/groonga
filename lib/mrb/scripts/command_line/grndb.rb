@@ -504,6 +504,7 @@ module Groonga
         end
 
         def recover
+          logger.log(:info, "Recovering database: <#{@database.path}>")
           if @force_truncate
             @database.each do |object|
               next unless truncate_target?(object)
