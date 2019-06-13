@@ -2,6 +2,15 @@ class TestGrnDBRecover < GroongaTestCase
   def setup
   end
 
+  def test_normal_info_log
+    groonga("table_create", "info", "TABLE_NO_KEY")
+    grndb("recover", "--log-level", "info")
+    message = <<-MESSAGE
+Recovering database: <#{@database_path}>
+    MESSAGE
+    assert_includes(File.read(@log_path), message)
+  end
+
   def test_orphan_inspect
     groonga("table_create", "inspect", "TABLE_NO_KEY")
     _id, _name, path, *_ = JSON.parse(groonga("table_list").output)[1][1]
