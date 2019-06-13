@@ -513,6 +513,7 @@ module Groonga
             clear_locks
           end
           @database.recover
+          logger.log(:info, "Recovered database: <#{@database.path}>")
         end
 
         private
