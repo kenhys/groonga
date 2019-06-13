@@ -75,7 +75,6 @@ module Groonga
           @output.puts(message)
           @output.puts
           @output.puts(command.help_message)
-          logger.log_error(message)
           @succeesed = false
           return
         end
@@ -88,7 +87,6 @@ module Groonga
           message = "Failed to open database: <#{@database_path}>"
           @output.puts(message)
           @output.puts(error.message)
-          logger.log_error(message)
           @succeeded = false
           return
         end
