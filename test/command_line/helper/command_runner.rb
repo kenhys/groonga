@@ -182,6 +182,24 @@ module CommandRunner
     end
   end
 
+  def normalize_groonga_log(text)
+    normalized = ""
+    text.split("\n").each do |line|
+      line = normalize_init_line(line)
+      if line =~ /grn_init: <VERSION>/ or
+        line =~ /grn_fin / or
+        line =~ /vm.overcommit_memory / or
+        line =~ /spec:\d+/ or
+        line =~ /DDL:\d+/ or
+        line =~ /To set vm.overcommit_memory/ or
+        line =~ /run 'sudo \/sbin\/sysctl/
+      else
+        normalized << "#{line}\n"
+      end
+    end
+    normalized
+  end
+
   private
   def run_command_interactive(*command_line)
     IO.pipe do |input_read, input_write|
