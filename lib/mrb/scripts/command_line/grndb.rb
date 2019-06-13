@@ -311,7 +311,7 @@ module Groonga
           case object
           when IndexColumn
             unless object.locked?
-              logger.log(:info, "[#{object.name}] object is not locked")
+              logger.log(:info, "[#{object.name}] Index column is not locked")
               return
             end
             message =
@@ -321,7 +321,7 @@ module Groonga
             failed(message)
           when Column
             unless object.locked?
-              logger.log(:info, "[#{object.name}] object is not locked")
+              logger.log(:info, "[#{object.name}] Column is not locked")
               return
             end
             name = object.name
@@ -334,7 +334,7 @@ module Groonga
             failed(message)
           when Table
             unless object.locked?
-              logger.log(:info, "[#{object.name}] object is not locked")
+              logger.log(:info, "[#{object.name}] Table is not locked")
               return
             end
             name = object.name
@@ -352,7 +352,7 @@ module Groonga
           case object
           when IndexColumn
             unless object.corrupt?
-              logger.log(:info, "[#{object.name}] object is not corrupted")
+              logger.log(:info, "[#{object.name}] Index column is not corrupted")
               return
             end
             message =
@@ -361,7 +361,7 @@ module Groonga
             failed(message)
           when Column
             unless object.corrupt?
-              logger.log(:info, "[#{object.name}] object is not corrupted")
+              logger.log(:info, "[#{object.name}] Column is not corrupted")
               return
             end
             name = object.name
@@ -373,7 +373,7 @@ module Groonga
             failed(message)
           when Table
             unless object.corrupt?
-              logger.log(:info, "[#{object.name}] object is not corrupted")
+              logger.log(:info, "[#{object.name}] Table is not corrupted")
               return
             end
             name = object.name
