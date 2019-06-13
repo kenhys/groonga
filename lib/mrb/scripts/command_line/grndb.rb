@@ -120,6 +120,7 @@ module Groonga
       end
 
       def check(database, options, arguments)
+        logger.log(:info, "Checking database: <#{@database_path}>")
         checker = Checker.new(@output)
         checker.program_path = @program_path
         checker.database_path = @database_path
@@ -139,6 +140,7 @@ module Groonga
         else
           checker.check_all
         end
+        logger.log(:info, "Checked database: <#{@database_path}>")
       end
 
       class Checker
@@ -176,7 +178,6 @@ module Groonga
         end
 
         def check_database
-          logger.log(:info, "Checking database: <#{@database_path}>")
           check_database_orphan_inspect
           check_database_locked
           check_database_corrupt
