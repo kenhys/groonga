@@ -232,18 +232,20 @@ module Groonga
         end
 
         def check_database_orphan_inspect
+          found = false
           open_database_cursor do |cursor|
             cursor.each do |id|
               if cursor.key == "inspect" and @context[id].nil?
                 message =
                   "Database has orphan 'inspect' object. " +
                   "Remove it by '#{@program_path} recover #{@database_path}'."
+                found = true
                 failed(message)
                 break
               end
             end
           end
-          if @succeeded
+          unless found
             logger.log(:info, "Database doesn't have orphan 'inspect' object in #{@database_path}")
           end
         end
