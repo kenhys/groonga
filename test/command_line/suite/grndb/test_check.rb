@@ -35,17 +35,16 @@ class TestGrnDBCheck < GroongaTestCase
   def test_normal_info_log
     groonga("table_create", "info", "TABLE_NO_KEY")
     grndb("check", "--log-level", "info")
-    messages = <<-MESSAGE
-Checking database: <#{@database_path}>
-Database is not locked: <#{@database_path}>
-Database is not corrupted: <#{@database_path}>
-Database is not dirty: <#{@database_path}>
-[info] object is not locked
-[info] object is not corrupted
+    assert_equal(<<-MESSAGE, normalize_groonga_log(File.read(@log_path)))
+1970-01-01 00:00:00.000000|i| Checking database: <#{@database_path}>
+1970-01-01 00:00:00.000000|i| Database doesn't have orphan 'inspect' object in #{@database_path}
+1970-01-01 00:00:00.000000|i| Database is not locked: <#{@database_path}>
+1970-01-01 00:00:00.000000|i| Database is not corrupted: <#{@database_path}>
+1970-01-01 00:00:00.000000|i| Database is not dirty: <#{@database_path}>
+1970-01-01 00:00:00.000000|i| [info] Table is not locked
+1970-01-01 00:00:00.000000|i| [info] Table is not corrupted
+1970-01-01 00:00:00.000000|i| Checked database: <#{@database_path}>
     MESSAGE
-    messages.split("\n").each do |message|
-      assert_includes(File.read(@log_path), message)
-    end
   end
 
   def test_orphan_inspect
@@ -59,7 +58,6 @@ Database is not dirty: <#{@database_path}>
 Database has orphan 'inspect' object. Remove it by '#{real_grndb_path} recover #{@database_path}'.
     MESSAGE
     assert_equal(message, error.error_output)
-    assert_includes(File.read(@log_path), message)
   end
 
   def test_locked_database
@@ -71,7 +69,9 @@ Database has orphan 'inspect' object. Remove it by '#{real_grndb_path} recover #
 Database is locked. It may be broken. Re-create the database.
     MESSAGE
     assert_equal(message, error.error_output)
-    assert_includes(File.read(@log_path), message)
+    assert_equal(<<-MESSAGE, normalize_groonga_log(File.read(@log_path)))
+1970-01-01 00:00:00.000000|e| Database is locked. It may be broken. Re-create the database.
+    MESSAGE
   end
 
   sub_test_case "dirty database" do
@@ -93,7 +93,9 @@ load --table Users
 Database wasn't closed successfully. It may be broken. Re-create the database.
       MESSAGE
       assert_equal(message,  error.error_output)
-      assert_includes(File.read(@log_path), message)
+      assert_equal(<<-MESSAGE, normalize_groonga_log(File.read(@log_path)))
+1970-01-01 00:00:00.000000|e| Database wasn't closed successfully. It may be broken. Re-create the database.
+      MESSAGE
     end
 
     def test_have_plugin
@@ -117,7 +119,9 @@ load --table Users
 Database wasn't closed successfully. It may be broken. Re-create the database.
       MESSAGE
       assert_equal(message, error.error_output)
-      assert_includes(File.read(@log_path), message)
+      assert_equal(<<-MESSAGE, normalize_groonga_log(File.read(@log_path)))
+1970-01-01 00:00:00.000000|e| Database wasn't closed successfully. It may be broken. Re-create the database.
+      MESSAGE
     end
   end
 
