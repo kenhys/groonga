@@ -185,7 +185,7 @@ module Groonga
         end
 
         def check_one(target_name)
-          logger.log(:info, "Checking: <#{target_name}>")
+          logger.log(:info, "Checking object: <#{target_name}>")
           target = @context[target_name]
           if target.nil?
             exist_p = open_database_cursor do |cursor|
@@ -203,6 +203,7 @@ module Groonga
           end
 
           check_object_recursive(target)
+          logger.log(:info, "Checked object: <#{target_name}>")
         end
 
         def check_all
