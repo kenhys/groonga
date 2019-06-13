@@ -565,6 +565,7 @@ module Groonga
         def clear_locks
           if @database.locked?
             @database.clear_lock
+            logger.log(:info, "Clear locked database: <#{@database.path}>")
           end
           @database.each do |object|
             case object
