@@ -157,23 +157,37 @@ object corrupt: <[db][recover] column may be broken: <Users.age>: please truncat
 
   def test_force_clear_locked_database
     groonga("lock_acquire")
-    result = grndb("recover", "--force-lock-clear")
+    result = grndb("recover", "--force-lock-clear", "--log-level", "info")
     assert_equal("", result.error_output)
+    message = <<-MESSAGE
+Clear locked database: <#{@database_path}>
+    MESSAGE
+    assert_includes(File.read(@log_path), message)
   end
 
   def test_force_clear_locked_table
     groonga("table_create", "Users", "TABLE_HASH_KEY", "ShortText")
     groonga("lock_acquire", "Users")
-    result = grndb("recover", "--force-lock-clear")
+    result = grndb("recover", "--force-lock-clear", "--log-level", "info")
     assert_equal("", result.error_output)
+    _id, _name, path, *_ = JSON.parse(groonga("table_list").output)[1][1]
+    message = <<-MESSAGE
+[Users] Clear locked object: <#{path}>
+    MESSAGE
+    assert_includes(File.read(@log_path), message)
   end
 
   def test_force_clear_locked_data_column
     groonga("table_create", "Users", "TABLE_HASH_KEY", "ShortText")
     groonga("column_create", "Users", "age", "COLUMN_SCALAR", "UInt8")
     groonga("lock_acquire", "Users.age")
-    result = grndb("recover", "--force-lock-clear")
+    result = grndb("recover", "--force-lock-clear", "--log-level", "info")
     assert_equal("", result.error_output)
+    _id, _name, path, *_ = JSON.parse(groonga("column_list Users").output)[1][2]
+    message = <<-MESSAGE
+[Users.age] Clear locked object: <#{path}>
+    MESSAGE
+    assert_includes(File.read(@log_path), message)
   end
 
   def test_force_clear_locked_index_column
@@ -193,8 +207,13 @@ object corrupt: <[db][recover] column may be broken: <Users.age>: please truncat
     n_hits, _columns, *_records = select_result[0]
     assert_equal([0], n_hits)
 
-    result = grndb("recover", "--force-lock-clear")
+    result = grndb("recover", "--force-lock-clear", "--log-level", "info")
     assert_equal("", result.error_output)
+    _id, _name, path, *_ = JSON.parse(groonga("column_list Ages").output)[1][2]
+    message = <<-MESSAGE
+[io][remove] removed path: <#{path}>
+    MESSAGE
+    assert_includes(File.read(@log_path), message)
 
     select_result = groonga_select("Users", "--query", "age:29")
     n_hits, _columns, *_records = select_result[0]
