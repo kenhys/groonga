@@ -153,7 +153,13 @@ load --table Users
 [Users] Can't open object. It's broken. Re-create the object or the database.
     MESSAGE
     assert_equal(message, error.error_output)
-    assert_includes(File.read(@log_path), message)
+    assert_equal(<<-MESSAGE, normalize_groonga_log(File.read(@log_path)))
+1970-01-01 00:00:00.000000|e| system call error: No such file or directory: failed to open path: <#{path}>
+1970-01-01 00:00:00.000000|e| grn_ctx_at: failed to open object: <256>(<Users>):<48>(<table:hash_key>)
+1970-01-01 00:00:00.000000|e| [Users] Can't open object. It's broken. Re-create the object or the database.
+1970-01-01 00:00:00.000000|e| grn_ctx_at: failed to open object: <256>(<Users>):<48>(<table:hash_key>)
+1970-01-01 00:00:00.000000|n| (1 same messages are truncated)
+    MESSAGE
   end
 
   def test_locked_table
@@ -225,7 +231,8 @@ load --table Users
       external_process.input.puts("{\"_key\": \"x\"}")
       external_process.input.puts("]")
     end
-    FileUtils.rm("#{@database_path}.0000100.001")
+    removed_path = "#{@database_path}.0000100.001"
+    FileUtils.rm(removed_path)
     error = assert_raise(CommandRunner::Error) do
       grndb("check")
     end
@@ -233,7 +240,10 @@ load --table Users
 [Users] Table is corrupt. (1) Truncate the table (truncate Users or '#{real_grndb_path} recover --force-truncate #{@database_path}') and (2) load data again.
     MESSAGE
     assert_equal(message, error.error_output)
-    assert_includes(File.read(@log_path), message)
+    assert_equal(<<-MESSAGE, normalize_groonga_log(File.read(@log_path)))
+1970-01-01 00:00:00.000000|e| system call error: No such file or directory: [io][corrupt] used path doesn't exist: <#{removed_path}>
+1970-01-01 00:00:00.000000|e| [Users] Table is corrupt. (1) Truncate the table (truncate Users or '#{real_grndb_path} recover --force-truncate #{@database_path}') and (2) load data again.
+    MESSAGE
   end
 
   def test_corrupt_double_array_table
