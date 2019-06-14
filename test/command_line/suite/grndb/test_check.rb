@@ -445,16 +445,18 @@ load --table Users
       error = assert_raise(CommandRunner::Error) do
         grndb("check", "--target", "Ages")
       end
-      messages = <<-MESSAGE
+      assert_equal(<<-MESSAGE, error.error_output)
 [Ages] Table is locked. It may be broken. (1) Truncate the table (truncate Ages) or clear lock of the table (lock_clear Ages) and (2) load data again.
 [Ages.users_age] Index column is locked. It may be broken. Re-create index by '#{real_grndb_path} recover #{@database_path}'.
 [Users] Table is locked. It may be broken. (1) Truncate the table (truncate Users) or clear lock of the table (lock_clear Users) and (2) load data again.
 [Users.age] Data column is locked. It may be broken. (1) Truncate the column (truncate Users.age) or clear lock of the column (lock_clear Users.age) and (2) load data again.
       MESSAGE
-      assert_equal(messages, error.error_output)
-      messages.split("\n").each do |message|
-        assert_includes(File.read(@log_path), message)
-      end
+      assert_equal(<<-MESSAGE, normalize_groonga_log(File.read(@log_path)))
+1970-01-01 00:00:00.000000|e| [Ages] Table is locked. It may be broken. (1) Truncate the table (truncate Ages) or clear lock of the table (lock_clear Ages) and (2) load data again.
+1970-01-01 00:00:00.000000|e| [Ages.users_age] Index column is locked. It may be broken. Re-create index by '#{real_grndb_path} recover #{@database_path}'.
+1970-01-01 00:00:00.000000|e| [Users] Table is locked. It may be broken. (1) Truncate the table (truncate Users) or clear lock of the table (lock_clear Users) and (2) load data again.
+1970-01-01 00:00:00.000000|e| [Users.age] Data column is locked. It may be broken. (1) Truncate the column (truncate Users.age) or clear lock of the column (lock_clear Users.age) and (2) load data again.
+      MESSAGE
     end
 
     def test_indexed_table
@@ -475,16 +477,18 @@ load --table Users
       error = assert_raise(CommandRunner::Error) do
         grndb("check", "--target", "Names")
       end
-      messages = <<-MESSAGE
+      assert_equal(<<-MESSAGE, error.error_output)
 [Names] Table is locked. It may be broken. (1) Truncate the table (truncate Names) or clear lock of the table (lock_clear Names) and (2) load data again.
 [Names.users_names] Index column is locked. It may be broken. Re-create index by '#{real_grndb_path} recover #{@database_path}'.
 [Users] Table is locked. It may be broken. (1) Truncate the table (truncate Users) or clear lock of the table (lock_clear Users) and (2) load data again.
 [Users.name] Data column is locked. It may be broken. (1) Truncate the column (truncate Users.name) or clear lock of the column (lock_clear Users.name) and (2) load data again.
       MESSAGE
-      assert_equal(messages, error.error_output)
-      messages.split("\n").each do |message|
-        assert_includes(File.read(@log_path), message)
-      end
+      assert_equal(<<-MESSAGE, normalize_groonga_log(File.read(@log_path)))
+1970-01-01 00:00:00.000000|e| [Names] Table is locked. It may be broken. (1) Truncate the table (truncate Names) or clear lock of the table (lock_clear Names) and (2) load data again.
+1970-01-01 00:00:00.000000|e| [Names.users_names] Index column is locked. It may be broken. Re-create index by '#{real_grndb_path} recover #{@database_path}'.
+1970-01-01 00:00:00.000000|e| [Users] Table is locked. It may be broken. (1) Truncate the table (truncate Users) or clear lock of the table (lock_clear Users) and (2) load data again.
+1970-01-01 00:00:00.000000|e| [Users.name] Data column is locked. It may be broken. (1) Truncate the column (truncate Users.name) or clear lock of the column (lock_clear Users.name) and (2) load data again.
+      MESSAGE
     end
 
     def test_indexed_data_column
@@ -512,17 +516,20 @@ load --table Users
       error = assert_raise(CommandRunner::Error) do
         grndb("check", "--target", "Users.name")
       end
-      messages = <<-MESSAGE
+      assert_equal(<<-MESSAGE, error.error_output)
 [Users.name] Data column is locked. It may be broken. (1) Truncate the column (truncate Users.name) or clear lock of the column (lock_clear Users.name) and (2) load data again.
 [NormalizedNames.users_name] Index column is locked. It may be broken. Re-create index by '#{real_grndb_path} recover #{@database_path}'.
 [Names.users_name] Index column is locked. It may be broken. Re-create index by '#{real_grndb_path} recover #{@database_path}'.
 [NormalizedNames] Table is locked. It may be broken. (1) Truncate the table (truncate NormalizedNames) or clear lock of the table (lock_clear NormalizedNames) and (2) load data again.
 [Names] Table is locked. It may be broken. (1) Truncate the table (truncate Names) or clear lock of the table (lock_clear Names) and (2) load data again.
       MESSAGE
-      assert_equal(messages, error.error_output)
-      messages.split("\n").each do |message|
-        assert_includes(File.read(@log_path), message)
-      end
+      assert_equal(<<-MESSAGE, normalize_groonga_log(File.read(@log_path)))
+1970-01-01 00:00:00.000000|e| [Users.name] Data column is locked. It may be broken. (1) Truncate the column (truncate Users.name) or clear lock of the column (lock_clear Users.name) and (2) load data again.
+1970-01-01 00:00:00.000000|e| [NormalizedNames.users_name] Index column is locked. It may be broken. Re-create index by '#{real_grndb_path} recover #{@database_path}'.
+1970-01-01 00:00:00.000000|e| [Names.users_name] Index column is locked. It may be broken. Re-create index by '#{real_grndb_path} recover #{@database_path}'.
+1970-01-01 00:00:00.000000|e| [NormalizedNames] Table is locked. It may be broken. (1) Truncate the table (truncate NormalizedNames) or clear lock of the table (lock_clear NormalizedNames) and (2) load data again.
+1970-01-01 00:00:00.000000|e| [Names] Table is locked. It may be broken. (1) Truncate the table (truncate Names) or clear lock of the table (lock_clear Names) and (2) load data again.
+      MESSAGE
     end
 
     def test_cycle_reference
@@ -542,16 +549,18 @@ load --table Users
       error = assert_raise(CommandRunner::Error) do
         grndb("check", "--target", "Users")
       end
-      messages = <<-MESSAGE
+      assert_equal(<<-MESSAGE, error.error_output)
 [Users] Table is locked. It may be broken. (1) Truncate the table (truncate Users) or clear lock of the table (lock_clear Users) and (2) load data again.
 [Users.logs_user] Index column is locked. It may be broken. Re-create index by '#{real_grndb_path} recover #{@database_path}'.
 [Logs] Table is locked. It may be broken. (1) Truncate the table (truncate Logs) or clear lock of the table (lock_clear Logs) and (2) load data again.
 [Logs.user] Data column is locked. It may be broken. (1) Truncate the column (truncate Logs.user) or clear lock of the column (lock_clear Logs.user) and (2) load data again.
       MESSAGE
-      assert_equal(messages, error.error_output)
-      messages.split("\n").each do |message|
-        assert_includes(File.read(@log_path), message)
-      end
+      assert_equal(<<-MESSAGE, normalize_groonga_log(File.read(@log_path)))
+1970-01-01 00:00:00.000000|e| [Users] Table is locked. It may be broken. (1) Truncate the table (truncate Users) or clear lock of the table (lock_clear Users) and (2) load data again.
+1970-01-01 00:00:00.000000|e| [Users.logs_user] Index column is locked. It may be broken. Re-create index by '#{real_grndb_path} recover #{@database_path}'.
+1970-01-01 00:00:00.000000|e| [Logs] Table is locked. It may be broken. (1) Truncate the table (truncate Logs) or clear lock of the table (lock_clear Logs) and (2) load data again.
+1970-01-01 00:00:00.000000|e| [Logs.user] Data column is locked. It may be broken. (1) Truncate the column (truncate Logs.user) or clear lock of the column (lock_clear Logs.user) and (2) load data again.
+      MESSAGE
     end
   end
 end
