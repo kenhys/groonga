@@ -221,10 +221,13 @@ object corrupt: <[db][recover] column may be broken: <Users.age>: please truncat
     result = grndb("recover", "--force-lock-clear", "--log-level", "info")
     assert_equal("", result.error_output)
     _id, _name, path, *_ = JSON.parse(groonga("column_list Ages").output)[1][2]
-    message = <<-MESSAGE
-[io][remove] removed path: <#{path}>
+    assert_equal(<<-MESSAGE, normalize_groonga_log(File.read(@log_path)))
+1970-01-01 00:00:00.000000|i| Recovering database: <#{@database_path}>
+1970-01-01 00:00:00.000000|i| [io][remove] removed path: <#{path}>
+1970-01-01 00:00:00.000000|i| [io][remove] removed path: <#{path}.c>
+1970-01-01 00:00:00.000000|i| [ii][builder][fin] removed path: <#{path}XXXXXX>
+1970-01-01 00:00:00.000000|i| Recovered database: <#{@database_path}>
     MESSAGE
-    assert_includes(File.read(@log_path), message)
 
     select_result = groonga_select("Users", "--query", "age:29")
     n_hits, _columns, *_records = select_result[0]
