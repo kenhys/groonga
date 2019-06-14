@@ -242,14 +242,16 @@ object corrupt: <[db][recover] column may be broken: <Users.age>: please truncat
     error = assert_raise(CommandRunner::Error) do
       grndb("recover")
     end
-    messages = <<-MESSAGE
+    assert_equal(<<-MESSAGE, error.error_output)
 Failed to recover database: <#{@database_path}>
 incompatible file format: <[io][open] file size is too small: <0>(required: >= 64): <#{path[0..68]}>(-65)
     MESSAGE
-    assert_equal(messages, error.error_output)
-    messages.split("\n").each do |message|
-      assert_includes(File.read(@log_path), message)
-    end
+    assert_equal(<<-MESSAGE, normalize_groonga_log(File.read(@log_path)))
+1970-01-01 00:00:00.000000|e| [io][open] file size is too small: <0>(required: >= 64): <#{path}>
+1970-01-01 00:00:00.000000|e| grn_ctx_at: failed to open object: <256>(<Users>):<48>(<table:hash_key>)
+1970-01-01 00:00:00.000000|e| Failed to recover database: <#{@database_path}>
+1970-01-01 00:00:00.000000|e| incompatible file format: <[io][open] file size is too small: <0>(required: >= 64): <#{path[0..68]}>(-65)
+    MESSAGE
   end
 
   def test_broken_id
@@ -261,14 +263,16 @@ incompatible file format: <[io][open] file size is too small: <0>(required: >= 6
     error = assert_raise(CommandRunner::Error) do
       grndb("recover")
     end
-    messages = <<-MESSAGE
+    assert_equal(<<-MESSAGE, error.error_output)
 Failed to recover database: <#{@database_path}>
 incompatible file format: <failed to open: format ID is different: <#{path[0..85]}>(-65)
     MESSAGE
-    assert_equal(messages, error.error_output)
-    messages.split("\n").each do |message|
-      assert_includes(File.read(@log_path), message)
-    end
+    assert_equal(<<-MESSAGE, normalize_groonga_log(File.read(@log_path)))
+1970-01-01 00:00:00.000000|e| failed to open: format ID is different: <#{path}>: <GROONGA:IO:00001>
+1970-01-01 00:00:00.000000|e| grn_ctx_at: failed to open object: <256>(<Users>):<48>(<table:hash_key>)
+1970-01-01 00:00:00.000000|e| Failed to recover database: <#{@database_path}>
+1970-01-01 00:00:00.000000|e| incompatible file format: <failed to open: format ID is different: <#{path[0..85]}>(-65)
+    MESSAGE
   end
 
   def test_broken_type_hash
@@ -280,14 +284,17 @@ incompatible file format: <failed to open: format ID is different: <#{path[0..85
     error = assert_raise(CommandRunner::Error) do
       grndb("recover")
     end
-    messages = <<-MESSAGE
+    assert_equal(<<-MESSAGE, error.error_output)
 Failed to recover database: <#{@database_path}>
 invalid format: <[table][hash] file type must be 0x30: <0000>>(-54)
     MESSAGE
-    assert_equal(messages, error.error_output)
-    messages.split("\n").each do |message|
-      assert_includes(File.read(@log_path), message)
-    end
+    assert_equal(<<-MESSAGE, normalize_groonga_log(File.read(@log_path)))
+1970-01-01 00:00:00.000000|e| [table][hash] file type must be 0x30: <0000>
+1970-01-01 00:00:00.000000|e| grn_ctx_at: failed to open object: <256>(<Users>):<48>(<table:hash_key>)
+1970-01-01 00:00:00.000000|e| Failed to recover database: <#{@database_path}>
+1970-01-01 00:00:00.000000|e| invalid format: <[table][hash] file type must be 0x30: <0000>>(-54)
+    MESSAGE
+
   end
 
   def test_broken_type_array
@@ -304,8 +311,11 @@ Failed to recover database: <#{@database_path}>
 invalid format: <[table][array] file type must be 0x33: <0000>>(-54)
     MESSAGE
     assert_equal(messages, error.error_output)
-    messages.split("\n").each do |message|
-      assert_includes(File.read(@log_path), message)
-    end
+    assert_equal(<<-MESSAGE, normalize_groonga_log(File.read(@log_path)))
+1970-01-01 00:00:00.000000|e| [table][array] file type must be 0x33: <0000>
+1970-01-01 00:00:00.000000|e| grn_ctx_at: failed to open object: <256>(<Logs>):<51>(<table:no_key>)
+1970-01-01 00:00:00.000000|e| Failed to recover database: <#{@database_path}>
+1970-01-01 00:00:00.000000|e| invalid format: <[table][array] file type must be 0x33: <0000>>(-54)
+    MESSAGE
   end
 end
