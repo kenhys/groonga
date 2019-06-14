@@ -5,10 +5,9 @@ class TestGrnDBRecover < GroongaTestCase
   def test_normal_info_log
     groonga("table_create", "info", "TABLE_NO_KEY")
     grndb("recover", "--log-level", "info")
-    message = <<-MESSAGE
+    assert_equal(<<-MESSAGE, normalize_groonga_log(File.read(@log_path)))
 Recovering database: <#{@database_path}>
     MESSAGE
-    assert_includes(File.read(@log_path), message)
   end
 
   def test_orphan_inspect
@@ -26,14 +25,15 @@ Recovering database: <#{@database_path}>
     error = assert_raise(CommandRunner::Error) do
       grndb("recover")
     end
-    messages = <<-MESSAGE
+    assert_equal(<<-MESSAGE, error.error_output)
 Failed to recover database: <#{@database_path}>
 object corrupt: <[db][recover] database may be broken. Please re-create the database>(-55)
     MESSAGE
-    assert_equal(messages, error.error_output)
-    messages.split("\n").each do |message|
-      assert_includes(File.read(@log_path), message)
-    end
+    assert_equal(<<-MESSAGE, normalize_groonga_log(File.read(@log_path)))
+1970-01-01 00:00:00.000000|e| [db][recover] database may be broken. Please re-create the database
+1970-01-01 00:00:00.000000|e| Failed to recover database: <#{@database_path}>
+1970-01-01 00:00:00.000000|e| object corrupt: <[db][recover] database may be broken. Please re-create the database>(-55)
+    MESSAGE
   end
 
   sub_test_case("locked table") do
@@ -49,14 +49,15 @@ object corrupt: <[db][recover] database may be broken. Please re-create the data
       error = assert_raise(CommandRunner::Error) do
         grndb("recover")
       end
-      messages = <<-MESSAGE
+      assert_equal(<<-MESSAGE, error.error_output)
 Failed to recover database: <#{@database_path}>
 object corrupt: <[db][recover] table may be broken: <Users>: please truncate the table (or clear lock of the table) and load data again>(-55)
       MESSAGE
-      assert_equal(messages, error.error_output)
-      messages.split("\n").each do |message|
-        assert_includes(File.read(@log_path), message)
-      end
+      assert_equal(<<-MESSAGE, normalize_groonga_log(File.read(@log_path)))
+1970-01-01 00:00:00.000000|e| [db][recover] table may be broken: <Users>: please truncate the table (or clear lock of the table) and load data again
+1970-01-01 00:00:00.000000|e| Failed to recover database: <#{@database_path}>
+1970-01-01 00:00:00.000000|e| object corrupt: <[db][recover] table may be broken: <Users>: please truncate the table (or clear lock of the table) and load data again>(-55)
+      MESSAGE
     end
 
     def test_force_truncate
@@ -65,14 +66,17 @@ object corrupt: <[db][recover] table may be broken: <Users>: please truncate the
       result = grndb("recover",
                      "--force-truncate",
                      "--log-level", "info")
-      messages = <<-MESSAGE
+      assert_equal(<<-MESSAGE, result.error_output)
 [Users] Truncated broken object: <#{@table_path}>
 [Users] Removed broken object related file: <#{additional_path}>
       MESSAGE
-      assert_equal(messages, result.error_output)
-      messages.split("\n").each do |message|
-        assert_includes(File.read(@log_path), message)
-      end
+      assert_equal(<<-MESSAGE, normalize_groonga_log(File.read(@log_path)))
+1970-01-01 00:00:00.000000|i| Recovering database: <#{@database_path}>
+1970-01-01 00:00:00.000000|i| [io][remove] removed path: <#{@table_path}>
+1970-01-01 00:00:00.000000|i| [Users] Truncated broken object: <#{@table_path}>
+1970-01-01 00:00:00.000000|i| [Users] Removed broken object related file: <#{additional_path}>
+1970-01-01 00:00:00.000000|i| Recovered database: <#{@database_path}>
+      MESSAGE
     end
   end
 
@@ -91,14 +95,15 @@ object corrupt: <[db][recover] table may be broken: <Users>: please truncate the
       error = assert_raise(CommandRunner::Error) do
         grndb("recover")
       end
-      messages = <<-MESSAGE
+      assert_equal(<<-MESSAGE, error.error_output)
 Failed to recover database: <#{@database_path}>
 object corrupt: <[db][recover] column may be broken: <Users.age>: please truncate the column (or clear lock of the column) and load data again>(-55)
       MESSAGE
-      assert_equal(messages, error.error_output)
-      messages.split("\n").each do |message|
-        assert_includes(File.read(@log_path), message)
-      end
+      assert_equal(<<-MESSAGE, normalize_groonga_log(File.read(@log_path)))
+1970-01-01 00:00:00.000000|e| [db][recover] column may be broken: <Users.age>: please truncate the column (or clear lock of the column) and load data again
+1970-01-01 00:00:00.000000|e| Failed to recover database: <#{@database_path}>
+1970-01-01 00:00:00.000000|e| object corrupt: <[db][recover] column may be broken: <Users.age>: please truncate the column (or clear lock of the column) and load data again>(-55)
+      MESSAGE
     end
 
     def test_force_truncate
@@ -107,14 +112,17 @@ object corrupt: <[db][recover] column may be broken: <Users.age>: please truncat
       result = grndb("recover",
                      "--force-truncate",
                      "--log-level", "info")
-      messages = <<-MESSAGE
+      assert_equal(<<-MESSAGE, result.error_output)
 [Users.age] Truncated broken object: <#{@column_path}>
 [Users.age] Removed broken object related file: <#{additional_path}>
       MESSAGE
-      assert_equal(messages, result.error_output)
-      messages.split("\n").each do |message|
-        assert_includes(File.read(@log_path), message)
-      end
+      assert_equal(<<-MESSAGE, normalize_groonga_log(File.read(@log_path)))
+1970-01-01 00:00:00.000000|i| Recovering database: <#{@database_path}>
+1970-01-01 00:00:00.000000|i| [io][remove] removed path: <#{@column_path}>
+1970-01-01 00:00:00.000000|i| [Users.age] Truncated broken object: <#{@column_path}>
+1970-01-01 00:00:00.000000|i| [Users.age] Removed broken object related file: <#{additional_path}>
+1970-01-01 00:00:00.000000|i| Recovered database: <#{@database_path}>
+      MESSAGE
     end
   end
 
@@ -159,10 +167,11 @@ object corrupt: <[db][recover] column may be broken: <Users.age>: please truncat
     groonga("lock_acquire")
     result = grndb("recover", "--force-lock-clear", "--log-level", "info")
     assert_equal("", result.error_output)
-    message = <<-MESSAGE
-Clear locked database: <#{@database_path}>
+    assert_equal(<<-MESSAGE, normalize_groonga_log(File.read(@log_path)))
+1970-01-01 00:00:00.000000|i| Recovering database: <#{@database_path}>
+1970-01-01 00:00:00.000000|i| Clear locked database: <#{@database_path}>
+1970-01-01 00:00:00.000000|i| Recovered database: <#{@database_path}>
     MESSAGE
-    assert_includes(File.read(@log_path), message)
   end
 
   def test_force_clear_locked_table
@@ -171,10 +180,11 @@ Clear locked database: <#{@database_path}>
     result = grndb("recover", "--force-lock-clear", "--log-level", "info")
     assert_equal("", result.error_output)
     _id, _name, path, *_ = JSON.parse(groonga("table_list").output)[1][1]
-    message = <<-MESSAGE
-[Users] Clear locked object: <#{path}>
+    assert_equal(<<-MESSAGE, normalize_groonga_log(File.read(@log_path)))
+1970-01-01 00:00:00.000000|i| Recovering database: <#{@database_path}>
+1970-01-01 00:00:00.000000|i| [Users] Clear locked object: <#{path}>
+1970-01-01 00:00:00.000000|i| Recovered database: <#{@database_path}>
     MESSAGE
-    assert_includes(File.read(@log_path), message)
   end
 
   def test_force_clear_locked_data_column
@@ -184,10 +194,11 @@ Clear locked database: <#{@database_path}>
     result = grndb("recover", "--force-lock-clear", "--log-level", "info")
     assert_equal("", result.error_output)
     _id, _name, path, *_ = JSON.parse(groonga("column_list Users").output)[1][2]
-    message = <<-MESSAGE
-[Users.age] Clear locked object: <#{path}>
+    assert_equal(<<-MESSAGE, normalize_groonga_log(File.read(@log_path)))
+1970-01-01 00:00:00.000000|i| Recovering database: <#{@database_path}>
+1970-01-01 00:00:00.000000|i| [Users.age] Clear locked object: <#{path}>
+1970-01-01 00:00:00.000000|i| Recovered database: <#{@database_path}>
     MESSAGE
-    assert_includes(File.read(@log_path), message)
   end
 
   def test_force_clear_locked_index_column
