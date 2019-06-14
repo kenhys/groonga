@@ -403,15 +403,16 @@ load --table Users
       error = assert_raise(CommandRunner::Error) do
         grndb("check", "--target", "Admins")
       end
-      messages = <<-MESSAGE
+      assert_equal(<<-MESSAGE, error.error_output)
 [Admins] Table is locked. It may be broken. (1) Truncate the table (truncate Admins) or clear lock of the table (lock_clear Admins) and (2) load data again.
 [Users] Table is locked. It may be broken. (1) Truncate the table (truncate Users) or clear lock of the table (lock_clear Users) and (2) load data again.
 [Users.age] Data column is locked. It may be broken. (1) Truncate the column (truncate Users.age) or clear lock of the column (lock_clear Users.age) and (2) load data again.
       MESSAGE
-      assert_equal(messages, error.error_output)
-      messages.split("\n").each do |message|
-        assert_includes(File.read(@log_path), message)
-      end
+      assert_equal(<<-MESSAGE, normalize_groonga_log(File.read(@log_path)))
+1970-01-01 00:00:00.000000|e| [Admins] Table is locked. It may be broken. (1) Truncate the table (truncate Admins) or clear lock of the table (lock_clear Admins) and (2) load data again.
+1970-01-01 00:00:00.000000|e| [Users] Table is locked. It may be broken. (1) Truncate the table (truncate Users) or clear lock of the table (lock_clear Users) and (2) load data again.
+1970-01-01 00:00:00.000000|e| [Users.age] Data column is locked. It may be broken. (1) Truncate the column (truncate Users.age) or clear lock of the column (lock_clear Users.age) and (2) load data again.
+      MESSAGE
     end
 
     def test_referenced_table_by_column
