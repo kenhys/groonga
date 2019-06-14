@@ -339,9 +339,10 @@ load --table Users
 [Users.age] Data column is locked. It may be broken. (1) Truncate the column (truncate Users.age) or clear lock of the column (lock_clear Users.age) and (2) load data again.
       MESSAGE
       assert_equal(messages, error.error_output)
-      messages.split("\n").each do |message|
-        assert_includes(File.read(@log_path), message)
-      end
+      assert_equal(<<-MESSAGE, normalize_groonga_log(File.read(@log_path)))
+1970-01-01 00:00:00.000000|e| [Users] Table is locked. It may be broken. (1) Truncate the table (truncate Users) or clear lock of the table (lock_clear Users) and (2) load data again.
+1970-01-01 00:00:00.000000|e| [Users.age] Data column is locked. It may be broken. (1) Truncate the column (truncate Users.age) or clear lock of the column (lock_clear Users.age) and (2) load data again.
+      MESSAGE
     end
 
     def test_locked_data_column
@@ -358,7 +359,9 @@ load --table Users
 [Users.age] Data column is locked. It may be broken. (1) Truncate the column (truncate Users.age) or clear lock of the column (lock_clear Users.age) and (2) load data again.
       MESSAGE
       assert_equal(message, error.error_output)
-      assert_includes(File.read(@log_path), message)
+      assert_equal(<<-MESSAGE, normalize_groonga_log(File.read(@log_path)))
+1970-01-01 00:00:00.000000|e| [Users.age] Data column is locked. It may be broken. (1) Truncate the column (truncate Users.age) or clear lock of the column (lock_clear Users.age) and (2) load data again.
+      MESSAGE
     end
 
     def test_nonexistent_referenced_table
@@ -379,7 +382,12 @@ load --table Users
 [Users] Can't open object. It's broken. Re-create the object or the database.
       MESSAGE
       assert_equal(message, error.error_output)
-      assert_includes(File.read(@log_path), message)
+      removed_path = "#{@database_path}.0000100"
+      assert_equal(<<-MESSAGE, normalize_groonga_log(File.read(@log_path)))
+1970-01-01 00:00:00.000000|e| system call error: No such file or directory: failed to open path: <#{removed_path}>
+1970-01-01 00:00:00.000000|e| grn_ctx_at: failed to open object: <256>(<Users>):<48>(<table:hash_key>)
+1970-01-01 00:00:00.000000|e| [Users] Can't open object. It's broken. Re-create the object or the database.
+      MESSAGE
     end
 
     def test_referenced_table_by_table
