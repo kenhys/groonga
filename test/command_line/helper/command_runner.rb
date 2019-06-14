@@ -194,13 +194,35 @@ module CommandRunner
         line =~ /To set vm.overcommit_memory/ or
         line =~ /run 'sudo \/sbin\/sysctl/
       else
-        normalized << "#{line}\n"
+        next if stack_trace?(line)
+        normalized << "#{shorten_path(line)}\n"
       end
     end
     normalized
   end
 
+  def normalize_object_path(path)
+    File.join(File.basename(File.dirname(path)), File.basename(path))
+  end
+
   private
+  def shorten_path(line)
+    if line =~ /\A(.+)<(.+\.db.*)>/
+      path = normalize_object_path($2)
+      line = "#{$1}<#{path}>"
+    else
+      line
+    end
+  end
+
+  def stack_trace?(line)
+    if line =~ /\|e\| (.+?)\((.+?)\) \[(0x.+?)\]$/
+      true
+    else
+      false
+    end
+  end
+
   def run_command_interactive(*command_line)
     IO.pipe do |input_read, input_write|
       IO.pipe do |output_read, output_write|
