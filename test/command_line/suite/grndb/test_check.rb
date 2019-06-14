@@ -54,10 +54,9 @@ class TestGrnDBCheck < GroongaTestCase
     error = assert_raise(CommandRunner::Error) do
       grndb("check", "--log-level", "info")
     end
-    message = <<-MESSAGE
+    assert_equal(<<-MESSAGE, error.error_output)
 Database has orphan 'inspect' object. Remove it by '#{real_grndb_path} recover #{@database_path}'.
     MESSAGE
-    assert_equal(message, error.error_output)
   end
 
   def test_locked_database
@@ -65,10 +64,9 @@ Database has orphan 'inspect' object. Remove it by '#{real_grndb_path} recover #
     error = assert_raise(CommandRunner::Error) do
       grndb("check")
     end
-    message = <<-MESSAGE
+    assert_equal(<<-MESSAGE, error.error_output)
 Database is locked. It may be broken. Re-create the database.
     MESSAGE
-    assert_equal(message, error.error_output)
     assert_equal(<<-MESSAGE, normalize_groonga_log(File.read(@log_path)))
 1970-01-01 00:00:00.000000|e| Database is locked. It may be broken. Re-create the database.
     MESSAGE
@@ -89,10 +87,9 @@ load --table Users
       error = assert_raise(CommandRunner::Error) do
         grndb("check")
       end
-      message = <<-MESSAGE
+      assert_equal(<<-MESSAGE,  error.error_output)
 Database wasn't closed successfully. It may be broken. Re-create the database.
       MESSAGE
-      assert_equal(message,  error.error_output)
       assert_equal(<<-MESSAGE, normalize_groonga_log(File.read(@log_path)))
 1970-01-01 00:00:00.000000|e| Database wasn't closed successfully. It may be broken. Re-create the database.
       MESSAGE
@@ -115,10 +112,9 @@ load --table Users
       error = assert_raise(CommandRunner::Error) do
         grndb("check")
       end
-      message = <<-MESSAGE
+      assert_equal(<<-MESSAGE, error.error_output)
 Database wasn't closed successfully. It may be broken. Re-create the database.
       MESSAGE
-      assert_equal(message, error.error_output)
       assert_equal(<<-MESSAGE, normalize_groonga_log(File.read(@log_path)))
 1970-01-01 00:00:00.000000|e| Database wasn't closed successfully. It may be broken. Re-create the database.
       MESSAGE
@@ -149,10 +145,9 @@ load --table Users
     error = assert_raise(CommandRunner::Error) do
       grndb("check")
     end
-    message = <<-MESSAGE
+    assert_equal(<<-MESSAGE, error.error_output)
 [Users] Can't open object. It's broken. Re-create the object or the database.
     MESSAGE
-    assert_equal(message, error.error_output)
     assert_equal(<<-MESSAGE, normalize_groonga_log(File.read(@log_path)))
 1970-01-01 00:00:00.000000|e| system call error: No such file or directory: failed to open path: <#{path}>
 1970-01-01 00:00:00.000000|e| grn_ctx_at: failed to open object: <256>(<Users>):<48>(<table:hash_key>)
@@ -168,10 +163,9 @@ load --table Users
     error = assert_raise(CommandRunner::Error) do
       grndb("check")
     end
-    message = <<-MESSAGE
+    assert_equal(<<-MESSAGE, error.error_output)
 [Users] Table is locked. It may be broken. (1) Truncate the table (truncate Users) or clear lock of the table (lock_clear Users) and (2) load data again.
     MESSAGE
-    assert_equal(message, error.error_output)
     assert_equal(<<-MESSAGE, normalize_groonga_log(File.read(@log_path)))
 1970-01-01 00:00:00.000000|e| [Users] Table is locked. It may be broken. (1) Truncate the table (truncate Users) or clear lock of the table (lock_clear Users) and (2) load data again.
     MESSAGE
@@ -184,10 +178,9 @@ load --table Users
     error = assert_raise(CommandRunner::Error) do
       grndb("check")
     end
-    message = <<-MESSAGE
+    assert_equal(<<-MESSAGE, error.error_output)
 [Users.age] Data column is locked. It may be broken. (1) Truncate the column (truncate Users.age) or clear lock of the column (lock_clear Users.age) and (2) load data again.
     MESSAGE
-    assert_equal(message, error.error_output)
     assert_equal(<<-MESSAGE, normalize_groonga_log(File.read(@log_path)))
 1970-01-01 00:00:00.000000|e| [Users.age] Data column is locked. It may be broken. (1) Truncate the column (truncate Users.age) or clear lock of the column (lock_clear Users.age) and (2) load data again.
     MESSAGE
@@ -207,10 +200,9 @@ load --table Users
       error = assert_raise(CommandRunner::Error) do
         grndb("check")
       end
-      message = <<-MESSAGE
+      assert_equal(<<-MESSAGE, error.error_output)
 [Ages.users_age] Index column is locked. It may be broken. Re-create index by '#{real_grndb_path} recover #{@database_path}'.
       MESSAGE
-      assert_equal(message, error.error_output)
       assert_equal(<<-MESSAGE, normalize_groonga_log(File.read(@log_path)))
 1970-01-01 00:00:00.000000|e| [Ages.users_age] Index column is locked. It may be broken. Re-create index by '#{real_grndb_path} recover #{@database_path}'.
       MESSAGE
@@ -236,10 +228,9 @@ load --table Users
     error = assert_raise(CommandRunner::Error) do
       grndb("check")
     end
-    message = <<-MESSAGE
+    assert_equal(<<-MESSAGE, error.error_output)
 [Users] Table is corrupt. (1) Truncate the table (truncate Users or '#{real_grndb_path} recover --force-truncate #{@database_path}') and (2) load data again.
     MESSAGE
-    assert_equal(message, error.error_output)
     assert_equal(<<-MESSAGE, normalize_groonga_log(File.read(@log_path)))
 1970-01-01 00:00:00.000000|e| system call error: No such file or directory: [io][corrupt] used path doesn't exist: <#{removed_path}>
 1970-01-01 00:00:00.000000|e| [Users] Table is corrupt. (1) Truncate the table (truncate Users or '#{real_grndb_path} recover --force-truncate #{@database_path}') and (2) load data again.
@@ -259,10 +250,9 @@ load --table Users
     error = assert_raise(CommandRunner::Error) do
       grndb("check")
     end
-    message = <<-MESSAGE
+    assert_equal(<<-MESSAGE, error.error_output)
 [Users] Table is corrupt. (1) Truncate the table (truncate Users or '#{real_grndb_path} recover --force-truncate #{@database_path}') and (2) load data again.
     MESSAGE
-    assert_equal(message, error.error_output)
     assert_equal(<<-MESSAGE, normalize_groonga_log(File.read(@log_path)))
 1970-01-01 00:00:00.000000|e| system call error: No such file or directory: [dat][corrupt] used path doesn't exist: <#{removed_path}>
 1970-01-01 00:00:00.000000|e| [Users] Table is corrupt. (1) Truncate the table (truncate Users or '#{real_grndb_path} recover --force-truncate #{@database_path}') and (2) load data again.
@@ -289,10 +279,9 @@ load --table Users
     error = assert_raise(CommandRunner::Error) do
       grndb("check")
     end
-    message = <<-MESSAGE
+    assert_equal(<<-MESSAGE, error.error_output)
 [Data.text] Data column is corrupt. (1) Truncate the column (truncate Data.text or '#{real_grndb_path} recover --force-truncate #{@database_path}') and (2) load data again.
     MESSAGE
-    assert_equal(message, error.error_output)
     assert_equal(<<-MESSAGE, normalize_groonga_log(File.read(@log_path)))
 1970-01-01 00:00:00.000000|e| system call error: No such file or directory: [io][corrupt] used path doesn't exist: <#{removed_path}>
 1970-01-01 00:00:00.000000|e| [Data.text] Data column is corrupt. (1) Truncate the column (truncate Data.text or '#{real_grndb_path} recover --force-truncate #{@database_path}') and (2) load data again.
@@ -307,10 +296,9 @@ load --table Users
       error = assert_raise(CommandRunner::Error) do
         grndb("check", "--target", "Users")
       end
-      message = <<-MESSAGE
+      assert_equal(<<-MESSAGE, error.error_output)
 [Users] Can't open object. It's broken. Re-create the object or the database.
       MESSAGE
-      assert_equal(message, error.error_output)
       assert_equal(<<-MESSAGE, normalize_groonga_log(File.read(@log_path)))
 1970-01-01 00:00:00.000000|e| system call error: No such file or directory: failed to open path: <#{path}>
 1970-01-01 00:00:00.000000|e| grn_ctx_at: failed to open object: <256>(<Users>):<48>(<table:hash_key>)
@@ -334,11 +322,10 @@ load --table Users
       error = assert_raise(CommandRunner::Error) do
         grndb("check", "--target", "Users")
       end
-      messages = <<-MESSAGE
+      assert_equal(<<-MESSAGE, error.error_output)
 [Users] Table is locked. It may be broken. (1) Truncate the table (truncate Users) or clear lock of the table (lock_clear Users) and (2) load data again.
 [Users.age] Data column is locked. It may be broken. (1) Truncate the column (truncate Users.age) or clear lock of the column (lock_clear Users.age) and (2) load data again.
       MESSAGE
-      assert_equal(messages, error.error_output)
       assert_equal(<<-MESSAGE, normalize_groonga_log(File.read(@log_path)))
 1970-01-01 00:00:00.000000|e| [Users] Table is locked. It may be broken. (1) Truncate the table (truncate Users) or clear lock of the table (lock_clear Users) and (2) load data again.
 1970-01-01 00:00:00.000000|e| [Users.age] Data column is locked. It may be broken. (1) Truncate the column (truncate Users.age) or clear lock of the column (lock_clear Users.age) and (2) load data again.
@@ -355,10 +342,9 @@ load --table Users
       error = assert_raise(CommandRunner::Error) do
         grndb("check", "--target", "Users.age")
       end
-      message = <<-MESSAGE
+      assert_equal(<<-MESSAGE, error.error_output)
 [Users.age] Data column is locked. It may be broken. (1) Truncate the column (truncate Users.age) or clear lock of the column (lock_clear Users.age) and (2) load data again.
       MESSAGE
-      assert_equal(message, error.error_output)
       assert_equal(<<-MESSAGE, normalize_groonga_log(File.read(@log_path)))
 1970-01-01 00:00:00.000000|e| [Users.age] Data column is locked. It may be broken. (1) Truncate the column (truncate Users.age) or clear lock of the column (lock_clear Users.age) and (2) load data again.
       MESSAGE
@@ -378,10 +364,9 @@ load --table Users
       error = assert_raise(CommandRunner::Error) do
         grndb("check", "--target", "Bookmarks")
       end
-      message = <<-MESSAGE
+      assert_equal(<<-MESSAGE, error.error_output)
 [Users] Can't open object. It's broken. Re-create the object or the database.
       MESSAGE
-      assert_equal(message, error.error_output)
       removed_path = "#{@database_path}.0000100"
       assert_equal(<<-MESSAGE, normalize_groonga_log(File.read(@log_path)))
 1970-01-01 00:00:00.000000|e| system call error: No such file or directory: failed to open path: <#{removed_path}>
@@ -430,15 +415,16 @@ load --table Users
       error = assert_raise(CommandRunner::Error) do
         grndb("check", "--target", "Bookmarks.user")
       end
-      messages = <<-MESSAGE
+      assert_equal(<<-MESSAGE, error.error_output)
 [Bookmarks.user] Data column is locked. It may be broken. (1) Truncate the column (truncate Bookmarks.user) or clear lock of the column (lock_clear Bookmarks.user) and (2) load data again.
 [Users] Table is locked. It may be broken. (1) Truncate the table (truncate Users) or clear lock of the table (lock_clear Users) and (2) load data again.
 [Users.age] Data column is locked. It may be broken. (1) Truncate the column (truncate Users.age) or clear lock of the column (lock_clear Users.age) and (2) load data again.
       MESSAGE
-      assert_equal(messages, error.error_output)
-      messages.split("\n").each do |message|
-        assert_includes(File.read(@log_path), message)
-      end
+      assert_equal(<<-MESSAGE, normalize_groonga_log(File.read(@log_path)))
+1970-01-01 00:00:00.000000|e| [Bookmarks.user] Data column is locked. It may be broken. (1) Truncate the column (truncate Bookmarks.user) or clear lock of the column (lock_clear Bookmarks.user) and (2) load data again.
+1970-01-01 00:00:00.000000|e| [Users] Table is locked. It may be broken. (1) Truncate the table (truncate Users) or clear lock of the table (lock_clear Users) and (2) load data again.
+1970-01-01 00:00:00.000000|e| [Users.age] Data column is locked. It may be broken. (1) Truncate the column (truncate Users.age) or clear lock of the column (lock_clear Users.age) and (2) load data again.
+      MESSAGE
     end
 
     def test_locked_index_column
