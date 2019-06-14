@@ -254,7 +254,8 @@ load --table Users
       external_process.input.puts("{\"_key\": \"x\"}")
       external_process.input.puts("]")
     end
-    FileUtils.rm("#{@database_path}.0000100.001")
+    removed_path = "#{@database_path}.0000100.001"
+    FileUtils.rm(removed_path)
     error = assert_raise(CommandRunner::Error) do
       grndb("check")
     end
@@ -262,7 +263,10 @@ load --table Users
 [Users] Table is corrupt. (1) Truncate the table (truncate Users or '#{real_grndb_path} recover --force-truncate #{@database_path}') and (2) load data again.
     MESSAGE
     assert_equal(message, error.error_output)
-    assert_includes(File.read(@log_path), message)
+    assert_equal(<<-MESSAGE, normalize_groonga_log(File.read(@log_path)))
+1970-01-01 00:00:00.000000|e| system call error: No such file or directory: [dat][corrupt] used path doesn't exist: <#{removed_path}>
+1970-01-01 00:00:00.000000|e| [Users] Table is corrupt. (1) Truncate the table (truncate Users or '#{real_grndb_path} recover --force-truncate #{@database_path}') and (2) load data again.
+    MESSAGE
   end
 
   def test_corrupt_data_column
