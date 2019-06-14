@@ -195,7 +195,8 @@ module CommandRunner
         line =~ /run 'sudo \/sbin\/sysctl/
       else
         next if stack_trace?(line)
-        normalized << "#{shorten_path(line)}\n"
+        #normalized << "#{shorten_path(line)}\n"
+        normalized << "#{line}\n"
       end
     end
     normalized
