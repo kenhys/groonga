@@ -38,10 +38,11 @@ DEFAULT_INCLUDES =				\
 
 include groonga_sources.am
 nodist_EXTRA_groonga_SOURCES = $(NONEXISTENT_CXX_SOURCE)
-groonga_CFLAGS = $(AM_CFLAGS) $(LIBEDIT_CFLAGS)
+groonga_CFLAGS = $(AM_CFLAGS) $(LIBEDIT_CFLAGS) $(WINEDITLINE_CFLAGS)
 groonga_LDADD =					\
 	$(top_builddir)/lib/libgroonga.la	\
 	$(LIBEDIT_LIBS)				\
+	$(WINEDITLINE_LIBS)				\
 	$(MESSAGE_PACK_LIBS)
 
 include grnslap_sources.am
