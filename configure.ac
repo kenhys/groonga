@@ -849,6 +849,34 @@ if test "x$enable_libedit" != "xno"; then
   fi
 fi
 
+AC_ARG_ENABLE(wineditline,
+  [AS_HELP_STRING([--disable-wineditline],
+    [use WinEditLine for console. [default=auto-detect]])],
+  [enable_wineditline="$enableval"],
+  [enable_wineditline="auto"])
+if test "x$enable_wineditline" != "xno"; then
+  m4_ifdef([PKG_CHECK_MODULES], [
+    PKG_CHECK_MODULES([WINEDITLINE], [wineditline >= 2.205],
+      [LIBS_SAVE="$LIBS"
+       LDFLAGS_SAVE="$LDFLAGS"
+       LDFLAGS="$WINEDITLINE_LIBS $LDFLAGS"
+       AC_SEARCH_LIBS(source_editrc, edit,
+                      [wineditline_available=yes],
+                      [wineditline_available=no])
+       LIBS="$LIBS_SAVE"
+       LDFLAGS="$LDFLAGS_SAVE"],
+      [wineditline_available=no])
+    ],
+    [wineditline_available=no])
+  if test "x$wineditline_available" = "xyes"; then
+    AC_DEFINE(GRN_WITH_WINEDITLINE, [1], [Use WinEditLine with multibyte support.])
+  else
+    if test "x$enable_wineditline" = "xyes"; then
+      AC_MSG_ERROR("No WinEditLine found")
+    fi
+  fi
+fi
+
 # zlib
 AC_ARG_WITH(zlib,
   [AS_HELP_STRING([--with-zlib],
