@@ -233,6 +233,67 @@ line_editor_fgets(grn_ctx *ctx, grn_obj *buf)
 }
 #endif /* GRN_WITH_LIBEDIT */
 
+
+#ifdef GRN_WITH_WINEDITLINE
+#include <editline/readline.h>
+#include <locale.h>
+static char line_editor_history_path[PATH_MAX] = "";
+
+static void
+line_editor_init(int argc __attribute__((unused)), char *argv[])
+{
+  const char * const HOME_PATH = getenv("HOME");
+  const char * const HISTORY_PATH = "/.groonga-history";
+
+  setlocale(LC_ALL, "");
+
+  if (strlen(HOME_PATH) + strlen(HISTORY_PATH) < PATH_MAX) {
+    grn_strcpy(line_editor_history_path, PATH_MAX, HOME_PATH);
+    grn_strcat(line_editor_history_path, PATH_MAX, HISTORY_PATH);
+  } else {
+    line_editor_history_path[0] = '\0';
+  }
+
+  if (line_editor_history_path[0]) {
+    using_history();
+    read_history(line_editor_history_path);
+  }
+}
+
+static void
+line_editor_fin(void)
+{
+  if (line_editor_history_path[0]) {
+    write_history(line_editor_history_path);
+    free_history();
+  }
+}
+
+static grn_rc
+line_editor_fgets(grn_ctx *ctx, grn_obj *buf)
+{
+  grn_rc rc = GRN_SUCCESS;
+  const char *line;
+  line = readline("> ");
+  int nchar = mblen(line, PATH_MAX);
+  if (nchar == -1) {
+    GRN_LOG(ctx, GRN_LOG_WARNING,
+            "[prompt][wineditline] failed to read input: %s", strerror(errno));
+    return = GRN_INVALID_ARGUMENT;
+  }
+
+  if (nchar > 0) {
+    GRN_TEXT_PUTS(ctx, buf, line);
+    fflush(stdout);
+    add_history(line);
+    free(line);
+  } else {
+    rc = GRN_END_OF_DATA;
+  }
+  return rc;
+}
+#endif /* GRN_WITH_WINEDITLINE */
+
 grn_inline static grn_rc
 read_next_line(grn_ctx *ctx, grn_obj *buf)
 {
@@ -240,6 +301,8 @@ read_next_line(grn_ctx *ctx, grn_obj *buf)
   grn_rc rc = GRN_SUCCESS;
   if (!batchmode) {
 #ifdef GRN_WITH_LIBEDIT
+    rc = line_editor_fgets(ctx, buf);
+#elif GRN_WITH_WINEDITLINE
     rc = line_editor_fgets(ctx, buf);
 #else
     fprintf(stderr, "> ");
@@ -3119,6 +3182,9 @@ show_version(void)
 #endif
 #ifdef GRN_WITH_ARROW
   printf(",arrow");
+#endif
+#ifdef GRN_WITH_WINEDITLINE
+  printf(",wineditline");
 #endif
   printf("]\n");
 
