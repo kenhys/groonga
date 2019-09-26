@@ -19,6 +19,7 @@ class GroongaPackageTask < PackageTask
   def define
     super
     define_apt_build_sh_task
+    define_apt_keyring_build_sh_task
     define_yum_build_sh_task
   end
 
@@ -45,6 +46,53 @@ class GroongaPackageTask < PackageTask
     end
     namespace :apt do
       task :build => apt_build_sh
+    end
+  end
+
+  def define_apt_keyring_build_sh_task
+    version = "2019.09.27"
+    @archive_name = "groonga-keyring-#{version}.tar.gz"
+    @original_archive_name = @archive_name
+    file @original_archive_name do
+      p "A"
+    end
+    apache_arrow_apt_build_sh =
+      File.join(@apache_arrow_repository,
+                "dev",
+                "tasks",
+                "linux-packages",
+                "apt",
+                "build.sh")
+    apt_build_sh = File.join(__dir__, "apt", "build.sh")
+    file apt_build_sh => apache_arrow_apt_build_sh do |task|
+      p apache_arrow_apt_build_sh
+      cp(apache_arrow_apt_build_sh,
+         task.name)
+    end
+    basename = "groonga-keyring-#{version}"
+    p "C"
+    FileUtils.rm_rf(basename)
+    FileUtils.mkdir_p(basename)
+    p "D"
+    gpg_uid_path = File.join(__dir__, "..", "gpg_uid")
+    gpg_rsa4096_uid_path = File.join(__dir__, "..", "gpg_uid_rsa4096")
+    gpg_uid = File.read(gpg_uid_path).chomp
+    gpg_rsa4096_uid = File.read(gpg_rsa4096_uid_path).chomp
+    sh("gpg --armor --export #{gpg_uid} > #{basename}/groonga-keyring.gpg")
+    sh("gpg --armor --export #{gpg_rsa4096_uid} > #{basename}/groonga-keyring-rsa4096.gpg")
+    sh("gpg", "--no-default-keyring", "--keyring", "./#{basename}/groonga-archive-keyring.gpg",
+       "--import", "#{basename}/groonga-keyring.gpg")
+    sh("gpg", "--no-default-keyring", "--keyring", "./#{basename}/groonga-archive-keyring.gpg",
+       "--import", "#{basename}/groonga-keyring-rsa4096.gpg")
+    p "D"
+    sh("tar", "czvf", "#{basename}.tar.gz", "#{basename}/groonga-archive-keyring.gpg")
+
+    namespace :apt do
+      namespace :keyring do
+        p "Z"
+        desc "Build groonga-keyring package"
+        task :build => apt_build_sh
+      end
     end
   end
 

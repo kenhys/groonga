@@ -1,3 +1,9 @@
+groonga-keyring (2019.09.26-1) unstable; urgency=medium
+
+  * Merge old and new key into one keyring file.
+
+ -- Kentaro Hayashi <hayashi@clear-code.com>  Thu, 26 Sep 2019 11:54:48 +0900
+
 groonga-keyring (2018.01.29-1) unstable; urgency=medium
 
   * Add new key because weak key (1024bit) is regarded as invalid key by secure apt.
