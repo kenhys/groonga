@@ -47,6 +47,7 @@ def download(url, base)
   end
   FileUtils.rm_rf(base)
   extract_tar_gz(tar_gz)
+  FileUtils.symlink(base, "rapidjson-source")
   FileUtils.rm_rf(tar_gz)
 end
 

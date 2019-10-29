@@ -978,6 +978,20 @@ if test "x$with_rapidjson" != "xno"; then
                     [GRN_WITH_RAPIDJSON=no])
     AC_LANG_POP([C++])
   fi
+  if test "x$with_rapidjson" = "xbundled"; then
+    CXXFLAGS_SAVE="${CXXFLAGS}"
+    CXXFLAGS="-I\$(top_srcdir)/vendor/rapidjson-source/include"
+    AC_LANG_PUSH([C++])
+    AC_CHECK_HEADER(rapidjson/rapidjson.h,
+                    [GRN_WITH_RAPIDJSON=yes],
+                    [GRN_WITH_RAPIDJSON=no])
+    AC_LANG_POP([C++])
+    echo "${CXXFLAGS}"
+    CXXFLAGS="${CXXFLAGS_SAVE}"
+    if test "$GRN_WITH_RAPIDJSON" = "yes"; then
+      RAPIDJSON_CFLAGS="-I\$(top_srcdir)/vendor/rapidjson-source/include"
+    fi
+  fi
   if test "$GRN_WITH_RAPIDJSON" = "yes"; then
     AC_DEFINE(GRN_WITH_RAPIDJSON, [1],
               [Support RapidJSON.])
