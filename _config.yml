@@ -1,0 +1,6 @@
+markdown: kramdown
+uri: https://kenhys.github.io/groonga/
+
+kramdown:
+  input: GFM
+  smart_quotes: ["apos", "apos", "quot", "quot"]
